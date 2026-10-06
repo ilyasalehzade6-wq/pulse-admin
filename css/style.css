@@ -1,0 +1,528 @@
+:root {
+    --primary: #f1c40f;
+    --primary-hover: #d4ac0d;
+    --bg-main: #0a0a1a;
+    --bg-card: #1a1a2e;
+    --bg-header: #0f0f23;
+    --text: #ffffff;
+    --text-gray: #bdc3c7;
+    --border: #2c3e50;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --orange: #f39c12;
+    --red: #e74c3c;
+    --gray: #95a5a6;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: "Vazirmatn", Tahoma, sans-serif;
+    background: var(--bg-main);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+    line-height: 1.6;
+}
+
+/* صفحه‌ی ورود */
+.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    background: radial-gradient(circle at top, #1a1a2e 0%, #0a0a1a 60%);
+}
+
+.login-card {
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 50px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.login-logo { font-size: 56px; margin-bottom: 15px; }
+.login-title { font-size: 26px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+.login-subtitle { color: var(--text-gray); font-size: 14px; margin-bottom: 35px; }
+
+.form-group { margin-bottom: 18px; text-align: right; }
+.form-group label { display: block; font-size: 13px; color: var(--text); margin-bottom: 6px; }
+.form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: #0d0d1a;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border 0.2s;
+}
+.form-group input:focus { outline: none; border-color: var(--primary); }
+
+.btn-primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    background: var(--primary);
+    color: #000;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: background 0.2s;
+}
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.error-msg {
+    display: none;
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 14px;
+    padding: 10px;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 10px;
+}
+
+.login-footer { color: var(--text-gray); font-size: 12px; margin-top: 25px; }
+
+/* هدر داشبورد */
+.header {
+    background: var(--bg-header);
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-right, .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-logo { font-size: 28px; }
+.header-title { font-size: 20px; font-weight: 700; color: var(--primary); }
+.header-user { color: var(--text-gray); font-size: 14px; }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+.btn-ghost:hover { background: var(--primary); color: #000; border-color: var(--primary); }
+
+.container { max-width: 1300px; margin: 0 auto; padding: 30px 20px; }
+
+/* آمار */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-3px); }
+
+.stat-icon {
+    font-size: 32px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+}
+.stat-icon.blue   { background: rgba(52, 152, 219, 0.15); }
+.stat-icon.green  { background: rgba(46, 204, 113, 0.15); }
+.stat-icon.orange { background: rgba(243, 156, 18, 0.15); }
+.stat-icon.red    { background: rgba(231, 76, 60, 0.15); }
+
+.stat-value { font-size: 26px; font-weight: 700; color: var(--text); }
+.stat-label { font-size: 13px; color: var(--text-gray); margin-top: 3px; }
+
+/* Toolbar */
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-input {
+    flex: 1;
+    min-width: 260px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+}
+.search-input:focus { outline: none; border-color: var(--primary); }
+
+.filters { display: flex; gap: 8px; }
+
+.filter-btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.filter-btn:hover { border-color: var(--primary); }
+.filter-btn.active {
+    background: var(--primary);
+    color: #000;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+/* جدول */
+.table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.gyms-table { width: 100%; border-collapse: collapse; }
+.gyms-table thead { background: #0d0d1a; }
+
+.gyms-table th {
+    padding: 16px;
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-gray);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+}
+
+.gyms-table td {
+    padding: 15px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+}
+.gyms-table tbody tr:last-child td { border-bottom: none; }
+.gyms-table tbody tr:hover { background: rgba(241, 196, 15, 0.05); }
+.gyms-table .empty { text-align: center; color: var(--text-gray); padding: 40px !important; }
+
+/* Badge */
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.badge-green  { background: rgba(46, 204, 113, 0.2); color: var(--green); }
+.badge-orange { background: rgba(243, 156, 18, 0.2); color: var(--orange); }
+.badge-red    { background: rgba(231, 76, 60, 0.2); color: var(--red); }
+.badge-gray   { background: rgba(149, 165, 166, 0.2); color: var(--gray); }
+
+/* Loading */
+.loading {
+    display: none;
+    padding: 40px;
+    text-align: center;
+    color: var(--primary);
+    font-size: 14px;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-gray);
+    font-size: 12px;
+}
+
+/* موبایل */
+@media (max-width: 768px) {
+    .header { padding: 12px 15px; }
+    .header-title { font-size: 16px; }
+    .header-user { display: none; }
+    .container { padding: 20px 12px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    .gyms-table th, .gyms-table td { padding: 10px 8px; font-size: 12px; }
+}
+
+/* ═══════════════════════════════════════════════════════
+   🗂 تب‌ها
+   ═══════════════════════════════════════════════════════ */
+.tabs-nav {
+    display: flex;
+    gap: 4px;
+    background: var(--bg-header);
+    padding: 12px 30px;
+    border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    border-radius: 10px 10px 0 0;
+    border: none;
+    background: transparent;
+    color: var(--text-gray);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: var(--text);
+    background: rgba(241, 196, 15, 0.1);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    background: var(--bg-main);
+    border-bottom: 2px solid var(--primary);
+}
+
+/* ═══════════════════════════════════════════════════════
+   🔔 کارت درخواست
+   ═══════════════════════════════════════════════════════ */
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.request-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.request-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.request-gym {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.gym-icon {
+    font-size: 32px;
+}
+
+.gym-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.gym-owner {
+    font-size: 12px;
+    color: var(--text-gray);
+    margin-top: 4px;
+}
+
+.request-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.detail-row {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.detail-label {
+    color: var(--text-gray);
+    min-width: 80px;
+}
+
+.detail-value {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.detail-value.mono {
+    font-family: "Consolas", monospace;
+    font-size: 12px;
+}
+
+.request-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+/* ═══ دکمه‌های درخواست ═══ */
+.request-actions button {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-approve {
+    background: var(--green);
+    color: white;
+}
+.btn-approve:hover { background: #27ae60; }
+
+.btn-reject {
+    background: #c0392b;
+    color: white;
+}
+.btn-reject:hover { background: #a93226; }
+
+.btn-create {
+    background: var(--primary);
+    color: #000;
+}
+.btn-create:hover { background: var(--primary-hover); }
+
+.btn-copy {
+    background: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary) !important;
+}
+
+.btn-disabled {
+    background: var(--border);
+    color: var(--text-gray);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.license-info {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex: 1;
+}
+
+.license-key {
+    font-family: "Consolas", monospace;
+    font-size: 11px;
+    color: var(--green);
+    background: rgba(46, 204, 113, 0.1);
+    padding: 8px 12px;
+    border-radius: 8px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    direction: ltr;
+    text-align: left;
+}
+
+.text-muted {
+    color: var(--text-gray);
+    font-size: 13px;
+    font-style: italic;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px;
+    color: var(--text-gray);
+    font-size: 14px;
+}
+
+/* ═══ Badge های وضعیت ═══ */
+.badge-orange, .badge-blue, .badge-green, .badge-red, .badge-gray {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-orange { background: rgba(243, 156, 18, 0.2); color: #f39c12; }
+.badge-blue   { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.badge-green  { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.badge-red    { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+.badge-gray   { background: rgba(149, 165, 166, 0.2); color: #95a5a6; }
+
+/* ═══ دکمه‌ی ساخت خودکار ═══ */
+.btn-manual {
+    background: transparent;
+    color: var(--text-gray);
+    border: 1px solid var(--border) !important;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-manual:hover {
+    color: var(--text);
+    border-color: var(--text) !important;
+}
+
+.btn-create {
+    background: var(--green);
+    color: white;
+    position: relative;
+}
+.btn-create:hover { background: #27ae60; }
+.btn-create::before {
+    content: "🚀 ";
+}

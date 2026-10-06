@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود ادمین — پالس مدیریت</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="login-page">
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">⭐</div>
+            <h1 class="login-title">پالس ادمین</h1>
+            <p class="login-subtitle">ورود به پنل مدیریت</p>
+
+            <form id="login-form" class="login-form">
+                <div class="form-group">
+                    <label>📱 شماره موبایل</label>
+                    <input type="tel" id="phone" dir="ltr" placeholder="09123456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label>🔒 رمز عبور</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+
+                <button type="submit" class="btn-primary" id="login-btn">
+                    🔑 ورود
+                </button>
+
+                <div id="error-msg" class="error-msg"></div>
+            </form>
+
+            <p class="login-footer">فقط ادمین‌های مجاز</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // چک کن اگه قبلاً لاگین کرده
+        (async () => {
+            const session = await checkAdminSession();
+            if (session) {
+                window.location.href = CONFIG.DASHBOARD_PAGE;
+            }
+        })();
+
+        // فرم لاگین
+        document.getElementById("login-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("login-btn");
+            const err = document.getElementById("error-msg");
+
+            const phone = document.getElementById("phone").value.trim();
+            const password = document.getElementById("password").value;
+
+            err.textContent = "";
+            err.style.display = "none";
+            btn.disabled = true;
+            btn.textContent = "⏳ در حال ورود...";
+
+            try {
+                await adminLogin(phone, password);
+                window.location.href = CONFIG.DASHBOARD_PAGE;
+            } catch (e) {
+                err.textContent = "❌ " + (e.message || "خطا در ورود");
+                err.style.display = "block";
+                btn.disabled = false;
+                btn.textContent = "🔑 ورود";
+            }
+        });
+    </script>
+</body>
+</html>

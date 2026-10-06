@@ -1,0 +1,445 @@
+/**
+ * 🔔 پنل ادمین — مدیریت درخواست‌های تمدید لایسنس
+ */
+
+let allRequests = [];
+let currentRequestFilter = "all";
+
+// ═══════════════════════════════════════════════════════
+// راه‌اندازی
+// ═══════════════════════════════════════════════════════
+async function initRequests() {
+    const session = await checkAdminSession();
+    if (!session) {
+        window.location.href = CONFIG.LOGIN_PAGE;
+        return;
+    }
+
+    await loadRequests();
+}
+
+// ═══════════════════════════════════════════════════════
+// بارگذاری درخواست‌ها
+// ═══════════════════════════════════════════════════════
+async function loadRequests() {
+    showReqLoading(true);
+    try {
+        const client = getSupabase();
+
+        const { data, error } = await client
+            .from("license_requests")
+            .select(`
+                id,
+                gym_id,
+                plan_id,
+                plan_name,
+                price_toman,
+                hwid,
+                status,
+                payment_verified,
+                payment_verified_at,
+                license_key,
+                license_expiry,
+                note,
+                created_at,
+                gyms (name, phone, owner_name, owner_email)
+            `)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        allRequests = data || [];
+
+        updateRequestStats();
+        renderRequests();
+    } catch (e) {
+        console.error("خطا در بارگذاری درخواست‌ها:", e);
+        showReqError("خطا: " + e.message);
+    } finally {
+        showReqLoading(false);
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// آمار
+// ═══════════════════════════════════════════════════════
+function updateRequestStats() {
+    const pending = allRequests.filter(r => r.status === "pending").length;
+    const paid = allRequests.filter(r => r.status === "paid").length;
+    const completed = allRequests.filter(r => r.status === "completed").length;
+    const rejected = allRequests.filter(r => r.status === "rejected").length;
+
+    document.getElementById("req-pending").textContent = pending;
+    document.getElementById("req-paid").textContent = paid;
+    document.getElementById("req-completed").textContent = completed;
+    document.getElementById("req-rejected").textContent = rejected;
+}
+
+// ═══════════════════════════════════════════════════════
+// رندر لیست
+// ═══════════════════════════════════════════════════════
+function renderRequests() {
+    const container = document.getElementById("requests-list");
+
+    let filtered = allRequests;
+    if (currentRequestFilter !== "all") {
+        filtered = filtered.filter(r => r.status === currentRequestFilter);
+    }
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<div class="empty-state">هیچ درخواستی پیدا نشد</div>';
+        return;
+    }
+
+    container.innerHTML = filtered.map(r => renderRequestCard(r)).join("");
+}
+
+function renderRequestCard(r) {
+    const gym = r.gyms || {};
+    const gymName = gym.name || "بی‌نام";
+    const ownerName = gym.owner_name || "-";
+    const phone = gym.phone || "-";
+
+    const created = formatTimeAgo(r.created_at);
+
+    const statusBadge = getRequestStatusBadge(r);
+
+    // ─── دکمه‌ها بر اساس وضعیت ───
+    let buttons = "";
+
+    if (r.status === "pending") {
+        buttons = `
+            <button class="btn-approve" onclick="verifyPayment('${r.id}')">
+                ✅ تأیید پرداخت
+            </button>
+            <button class="btn-reject" onclick="rejectRequest('${r.id}')">
+                ❌ رد درخواست
+            </button>
+            <button class="btn-disabled" disabled>
+                🔑 ساخت لایسنس
+            </button>
+        `;
+    } else if (r.status === "paid") {
+        buttons = `
+            <button class="btn-disabled" disabled>
+                ✅ پرداخت تأیید شد
+            </button>
+            <button class="btn-create" onclick="generateAndCreateLicense('${r.id}')">
+                🚀 ساخت خودکار لایسنس
+            </button>
+            <button class="btn-manual" onclick="createLicense('${r.id}')">
+                ✏️ دستی
+            </button>
+        `;
+    } else if (r.status === "completed") {
+        buttons = `
+            <div class="license-info">
+                <span class="license-key" title="${r.license_key || ''}">
+                    🔑 ${(r.license_key || '').substring(0, 40)}...
+                </span>
+                <button class="btn-copy" onclick="copyToClipboard('${r.license_key}')">
+                    📋 کپی
+                </button>
+            </div>
+        `;
+    } else if (r.status === "rejected") {
+        buttons = `<span class="text-muted">رد شده: ${r.note || 'دلیل ثبت نشده'}</span>`;
+    }
+
+    return `
+        <div class="request-card" data-status="${r.status}">
+            <div class="request-header">
+                <div class="request-gym">
+                    <span class="gym-icon">🏢</span>
+                    <div>
+                        <div class="gym-name">${escapeHtml(gymName)}</div>
+                        <div class="gym-owner">👤 ${escapeHtml(ownerName)} | 📱 ${escapeHtml(phone)}</div>
+                    </div>
+                </div>
+                <div class="request-badge">${statusBadge}</div>
+            </div>
+
+            <div class="request-details">
+                <div class="detail-row">
+                    <span class="detail-label">📋 پلن:</span>
+                    <span class="detail-value">${escapeHtml(r.plan_name)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">💰 مبلغ:</span>
+                    <span class="detail-value">${(r.price_toman || 0).toLocaleString('fa-IR')} تومان</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🖥️ HWID:</span>
+                    <span class="detail-value mono" dir="ltr">${escapeHtml(r.hwid)}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🕐 زمان:</span>
+                    <span class="detail-value">${created}</span>
+                </div>
+            </div>
+
+            <div class="request-actions">
+                ${buttons}
+            </div>
+        </div>
+    `;
+}
+
+function getRequestStatusBadge(r) {
+    const map = {
+        pending:   { icon: "⏳", label: "در انتظار تأیید", cls: "orange" },
+        paid:      { icon: "💰", label: "پرداخت تأیید شد", cls: "blue" },
+        approved:  { icon: "🔧", label: "در حال ساخت", cls: "blue" },
+        completed: { icon: "✅", label: "لایسنس صادر شد", cls: "green" },
+        rejected:  { icon: "❌", label: "رد شده", cls: "red" },
+    };
+    const s = map[r.status] || { icon: "❓", label: r.status, cls: "gray" };
+    return `<span class="badge-${s.cls}">${s.icon} ${s.label}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// اکشن‌ها
+// ═══════════════════════════════════════════════════════
+async function verifyPayment(requestId) {
+    const confirm = window.confirm(
+        "آیا مطمئن هستید که پرداخت این درخواست را تأیید می‌کنید؟"
+    );
+    if (!confirm) return;
+
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_verify_payment", {
+            p_request_id: requestId,
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error);
+
+        alert("✅ پرداخت تأیید شد");
+        await loadRequests();
+    } catch (e) {
+        alert("❌ خطا: " + e.message);
+    }
+}
+
+async function rejectRequest(requestId) {
+    const reason = window.prompt("دلیل رد درخواست (اختیاری):");
+    if (reason === null) return;
+
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_reject_request", {
+            p_request_id: requestId,
+            p_reason: reason || "بدون دلیل",
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error);
+
+        alert("❌ درخواست رد شد");
+        await loadRequests();
+    } catch (e) {
+        alert("❌ خطا: " + e.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// 🚀 ساخت خودکار لایسنس (از سرور محلی)
+// ═══════════════════════════════════════════════════════
+async function generateAndCreateLicense(requestId) {
+    const request = allRequests.find(r => r.id === requestId);
+    if (!request) return;
+
+    const planDays = { "1m": 30, "3m": 90, "6m": 180, "1y": 365 };
+    const days = planDays[request.plan_id] || 30;
+
+    const confirm = window.confirm(
+        `🔐 ساخت خودکار لایسنس؟\n\n` +
+        `📋 پلن: ${request.plan_name}\n` +
+        `📅 اعتبار: ${days} روز\n` +
+        `🖥️ HWID: ${request.hwid}`
+    );
+    if (!confirm) return;
+
+    // ─── دکمه رو غیرفعال کن ───
+    const btn = event?.target;
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ در حال ساخت...";
+    }
+
+    try {
+        const client = getSupabase();
+
+        // ═══════════════════════════════════════════
+        // ۱. فراخوانی Edge Function
+        // ═══════════════════════════════════════════
+        const { data, error } = await client.functions.invoke("generate-license", {
+            body: {
+                hwid: request.hwid,
+                days: days,
+            },
+        });
+
+        if (error) throw error;
+        if (!data || !data.success) {
+            throw new Error(data?.error || "خطا در ساخت لایسنس");
+        }
+
+        const licenseKey = data.key;
+        console.log("🔑 کلید ساخته شد:", licenseKey);
+
+        // ═══════════════════════════════════════════
+        // ۲. محاسبه‌ی تاریخ انقضا
+        // ═══════════════════════════════════════════
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + days);
+
+        // ═══════════════════════════════════════════
+        // ۳. ذخیره در Supabase
+        // ═══════════════════════════════════════════
+        const { data: result, error: rpcError } = await client.rpc("admin_create_license", {
+            p_request_id: requestId,
+            p_license_key: licenseKey,
+            p_license_expiry: expiry.toISOString(),
+        });
+
+        if (rpcError) throw rpcError;
+        if (!result.success) throw new Error(result.error);
+
+        alert("✅ لایسنس با موفقیت ساخته و ذخیره شد!");
+        await loadRequests();
+
+    } catch (e) {
+        console.error("خطا:", e);
+        let msg = e.message || "خطای نامشخص";
+
+        if (msg.includes("Failed to send") || msg.includes("not found")) {
+            msg = "❌ Edge Function پیدا نشد.\n" +
+                  "لطفاً از Supabase Dashboard → Edge Functions چک کن.";
+        } else if (msg.includes("PULSE_PRIVATE_KEY_PKCS8")) {
+            msg = "❌ Secret تنظیم نشده.\n" +
+                  "لطفاً PULSE_PRIVATE_KEY_PKCS8 رو در Secrets اضافه کن.";
+        }
+
+        alert("❌ " + msg);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "🚀 ساخت خودکار لایسنس";
+        }
+    }
+}
+
+async function createLicense(requestId) {
+    const request = allRequests.find(r => r.id === requestId);
+    if (!request) return;
+
+    // محاسبه تاریخ انقضا بر اساس پلن
+    const planDays = {
+        "1m": 30,
+        "3m": 90,
+        "6m": 180,
+        "1y": 365,
+    };
+
+    const days = planDays[request.plan_id] || 30;
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + days);
+    const expiryISO = expiry.toISOString();
+
+    // ⚠️ درخواست از ادمین: کلید رو دستی وارد کن
+    const licenseKey = window.prompt(
+        "کلید لایسنس را وارد کنید (از Seller Tool یا اسکریپت):\\n\\n" +
+        "فرمت: PULSE-XXXX-XXXX-XXXX-XXXX-EXP-YYYYMMDD-SIG-...",
+        ""
+    );
+
+    if (!licenseKey || !licenseKey.startsWith("PULSE-")) {
+        alert("❌ کلید نامعتبر است");
+        return;
+    }
+
+    const confirm = window.confirm(
+        `آیا از ساخت لایسنس مطمئن هستید؟\\n\\n` +
+        `📅 اعتبار: ${days} روز\\n` +
+        `📆 انقضا: ${expiry.toLocaleDateString('fa-IR')}`
+    );
+    if (!confirm) return;
+
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_create_license", {
+            p_request_id: requestId,
+            p_license_key: licenseKey,
+            p_license_expiry: expiryISO,
+        });
+
+        if (error) throw error;
+        if (!data.success) throw new Error(data.error);
+
+        alert("✅ لایسنس با موفقیت ساخته شد!");
+        await loadRequests();
+    } catch (e) {
+        alert("❌ خطا: " + e.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+// فیلتر
+// ═══════════════════════════════════════════════════════
+function setRequestFilter(filter) {
+    currentRequestFilter = filter;
+    document.querySelectorAll(".req-filter-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.filter === filter);
+    });
+    renderRequests();
+}
+
+// ═══════════════════════════════════════════════════════
+// ابزارها
+// ═══════════════════════════════════════════════════════
+function formatTimeAgo(iso) {
+    if (!iso) return "-";
+    try {
+        const d = new Date(iso);
+        const diff = (Date.now() - d.getTime()) / 1000;
+
+        if (diff < 60) return "همین حالا";
+        if (diff < 3600) return `${Math.floor(diff / 60)} دقیقه پیش`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} ساعت پیش`;
+        return `${Math.floor(diff / 86400)} روز پیش`;
+    } catch {
+        return "-";
+    }
+}
+
+function escapeHtml(s) {
+    if (!s) return "";
+    return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert("📋 کپی شد");
+    });
+}
+
+function showReqLoading(show) {
+    const el = document.getElementById("req-loading");
+    if (el) el.style.display = show ? "block" : "none";
+}
+
+function showReqError(msg) {
+    const el = document.getElementById("req-error");
+    if (el) {
+        el.textContent = msg;
+        el.style.display = "block";
+        setTimeout(() => { el.style.display = "none"; }, 5000);
+    }
+}
+
+window.addEventListener("DOMContentLoaded", initRequests);
