@@ -30,6 +30,9 @@
         <button class="tab-btn" onclick="showTab('requests')">
             🔔 درخواست‌های تمدید
         </button>
+        <button class="tab-btn" onclick="showTab('licenses')">
+            🔑 لایسنس‌ها
+        </button>
     </nav>
 
     <main id="tab-gyms" class="container tab-content active">
@@ -83,12 +86,15 @@
             <table class="gyms-table">
                 <thead>
                     <tr>
+                        <th>کد</th>
                         <th>نام مجموعه</th>
                         <th>مالک</th>
                         <th>شماره</th>
                         <th>پلن</th>
+                        <th>اعتبار</th>
                         <th>تاریخ ثبت</th>
                         <th>وضعیت</th>
+                        <th>عملیات</th>
                     </tr>
                 </thead>
                 <tbody id="gyms-tbody"></tbody>
@@ -148,6 +154,59 @@
 
     </main>
 
+    <!-- ═══ تب لایسنس‌ها ═══ -->
+    <main id="tab-licenses" class="container tab-content" style="display:none;">
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">🔑</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="lic-total">0</div>
+                    <div class="stat-label">کل لایسنس‌ها</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="lic-active">0</div>
+                    <div class="stat-label">فعال</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon orange">⏰</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="lic-expired">0</div>
+                    <div class="stat-label">منقضی</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">🔒</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="lic-revoked">0</div>
+                    <div class="stat-label">لغو شده</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="toolbar">
+            <input type="text" id="lic-search" class="search-input"
+                   placeholder="🔍 جستجو بر اساس کلید، مشتری، شماره یا HWID..."
+                   oninput="renderLicenses()">
+            <div class="filters">
+                <button class="lic-filter filter-btn active" data-filter="all" onclick="setLicFilter('all')">همه</button>
+                <button class="lic-filter filter-btn" data-filter="active" onclick="setLicFilter('active')">✅ فعال</button>
+                <button class="lic-filter filter-btn" data-filter="expired" onclick="setLicFilter('expired')">⏰ منقضی</button>
+                <button class="lic-filter filter-btn" data-filter="revoked" onclick="setLicFilter('revoked')">🔒 لغو</button>
+            </div>
+        </section>
+
+        <div id="lic-error" class="error-msg"></div>
+        <div id="lic-loading" class="loading">⏳ در حال بارگذاری...</div>
+
+        <div id="licenses-list" class="licenses-list"></div>
+
+    </main>
+
     <footer class="footer">
         <p>پالس مدیریت © ۲۰۲۶ — پنل ادمین</p>
     </footer>
@@ -156,6 +215,8 @@
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/admin.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/licenses.js"></script>
     <script>
         // ═══ تب‌ها ═══
         function showTab(tabName) {
@@ -173,6 +234,8 @@
 
             if (tabName === 'requests') {
                 loadRequests();
+            } else if (tabName === 'licenses') {
+                loadLicenses();
             }
         }
     </script>

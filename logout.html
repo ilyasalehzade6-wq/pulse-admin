@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>خروج — پالس ادمین</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a1a;
+            color: white;
+            font-family: Vazirmatn, Tahoma, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            direction: rtl;
+        }
+        .box {
+            text-align: center;
+            padding: 40px;
+            background: #1a1a2e;
+            border-radius: 20px;
+            border: 1px solid #2c3e50;
+            min-width: 320px;
+        }
+        h1 { color: #f1c40f; font-size: 22px; }
+        p { color: #bdc3c7; font-size: 14px; }
+        .spin { font-size: 48px; margin: 20px; animation: spin 1s linear infinite; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #f1c40f;
+            color: #000;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="box">
+        <div class="spin">🔄</div>
+        <h1>در حال خروج...</h1>
+        <p>لطفاً صبر کنید</p>
+        <a href="login.html" id="go-login" style="display:none;">🔑 رفتن به صفحه‌ی ورود</a>
+    </div>
+
+    <script>
+        const CONFIG = {
+            SUPABASE_URL: "https://lxicakedhhocpdphgzrt.supabase.co",
+            SUPABASE_KEY: "sb_publishable_ldxkcUuBekMeitRc57ZAsw_fFbva3Zi",
+        };
+
+        (async () => {
+            try {
+                // ۱. Supabase signOut
+                const client = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+                await client.auth.signOut();
+                console.log("✅ Supabase signOut");
+            } catch (e) {
+                console.error("خطا signOut:", e);
+            }
+
+            try {
+                // ۲. پاک کردن localStorage
+                localStorage.clear();
+                sessionStorage.clear();
+                console.log("✅ localStorage پاک شد");
+            } catch (e) {
+                console.error("خطا clear:", e);
+            }
+
+            // ۳. انتقال
+            document.querySelector(".spin").textContent = "✅";
+            document.querySelector("h1").textContent = "خارج شدید";
+            document.querySelector("p").textContent = "حالا می‌تونید وارد حساب دیگه بشید";
+            document.getElementById("go-login").style.display = "inline-block";
+
+            setTimeout(() => {
+                window.location.href = "login.html";
+            }, 1500);
+        })();
+    </script>
+</body>
+</html>
