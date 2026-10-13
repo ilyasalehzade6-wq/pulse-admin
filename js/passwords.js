@@ -129,9 +129,11 @@ function renderResetCard(req) {
         ? new Date(req.resolved_at).toLocaleString("fa-IR")
         : null;
 
+    const isUsernameReq = (req.request_type === 'username');
+    const resultLabel = isUsernameReq ? '👤 نام کاربری جدید:' : '🔑 رمز جدید:';
     const newPwdSection = req.new_password
         ? `<div style="background: rgba(46,204,113,0.1); padding: 10px; border-radius: 8px; margin-top: 10px;">
-              <strong>🔑 رمز جدید:</strong>
+              <strong>${resultLabel}</strong>
               <code style="background:#0f0f1a; padding: 4px 10px; border-radius: 5px; direction: ltr; display: inline-block; margin-right: 8px;">${escapeHtml(req.new_password)}</code>
               <button class="btn-ghost" onclick="copyText('${escapeHtml(req.new_password)}')" style="margin-right: 8px;">📋 کپی</button>
            </div>`
