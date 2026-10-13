@@ -162,11 +162,12 @@ function renderActions(g) {
         `);
     }
 
-    return `
+    // ✅ حالت عادی — با دکمه‌ی مشاهده
+    return withView(`
         <button class="btn-action btn-archive" onclick="archiveGym('${g.id}')" title="آرشیو">📦</button>
         <button class="btn-action btn-block" onclick="blockGym('${g.id}')" title="مسدود کردن">🚫</button>
         <button class="btn-action btn-delete" onclick="deleteGym('${g.id}')" title="حذف">🗑</button>
-    `;
+    `);
 }
 
 // ═══════════════════════════════════════════════════════
