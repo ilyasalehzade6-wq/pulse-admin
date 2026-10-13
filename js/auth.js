@@ -25,12 +25,7 @@ async function checkAdminSession() {
 
     const meta = session.user.user_metadata || {};
 
-    // 🛡️ چک امنیتی دوگانه
-    if (!meta.is_admin) {
-        console.warn("⛔ کاربر is_admin نداره");
-        return null;
-    }
-
+    // 🛡️ چک امنیتی: فقط شماره تلفن (بر اساس ADMIN_PHONES)
     const email = session.user.email || "";
     const phone = email.split("@")[0];
 
@@ -72,7 +67,7 @@ async function adminLogin(phone, password) {
         user_id: data.user.id,
         email: email,
         phone: phone,
-        full_name: data.user.user_metadata?.full_name || phone,
+        full_name: (data.user.user_metadata && data.user.user_metadata.full_name) || phone,
         access_token: data.session.access_token,
     };
 }
