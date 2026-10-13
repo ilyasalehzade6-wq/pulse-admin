@@ -199,7 +199,7 @@ function getRemainingDays(g) {
     const now = new Date();
     const diffMs = end - now;
     if (diffMs < 0) return -1;
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return Math.ceil(diffMs / 86400000);
 }
 
 // ═══════════════════════════════════════════════════════

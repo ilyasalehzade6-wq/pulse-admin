@@ -6,6 +6,7 @@
     <title>داشبورد ادمین — پالس مدیریت</title>
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/license-utils.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -32,6 +33,9 @@
         </button>
         <button class="tab-btn" onclick="showTab('licenses')">
             🔑 لایسنس‌ها
+        </button>
+        <button class="tab-btn" onclick="showTab('passwords')">
+            🔐 رمزها
         </button>
     </nav>
 
@@ -207,6 +211,66 @@
 
     </main>
 
+    <!-- ═══ تب رمزها ═══ -->
+    <main id="tab-passwords" class="container tab-content" style="display:none;">
+
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon orange">⏳</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="pwd-pending">0</div>
+                    <div class="stat-label">درخواست‌های در انتظار</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">✅</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="pwd-resolved">0</div>
+                    <div class="stat-label">حل شده</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon blue">🔐</div>
+                <div class="stat-info">
+                    <div class="stat-value" id="pwd-vault-total">0</div>
+                    <div class="stat-label">رمزهای ذخیره‌شده</div>
+                </div>
+            </div>
+        </section>
+
+        <h2 style="color:#f1c40f; margin: 25px 0 15px; font-size: 20px;">
+            📋 درخواست‌های فراموشی رمز
+        </h2>
+
+        <section class="toolbar">
+            <div class="filters">
+                <button class="pwd-filter filter-btn active" data-filter="all" onclick="setPwdFilter('all')">همه</button>
+                <button class="pwd-filter filter-btn" data-filter="pending" onclick="setPwdFilter('pending')">⏳ در انتظار</button>
+                <button class="pwd-filter filter-btn" data-filter="resolved" onclick="setPwdFilter('resolved')">✅ حل شده</button>
+            </div>
+            <button class="btn-ghost" onclick="loadPasswordResets()" title="رفرش">🔄 رفرش</button>
+        </section>
+
+        <div id="pwd-error" class="error-msg"></div>
+        <div id="pwd-loading" class="loading">⏳ در حال بارگذاری...</div>
+        <div id="pwd-requests-list" class="requests-list"></div>
+
+        <h2 style="color:#f1c40f; margin: 40px 0 15px; font-size: 20px;">
+            🔍 جستجوی مشتری برای مشاهده/ریست رمز
+        </h2>
+
+        <section class="toolbar">
+            <input type="text" id="pwd-search-input" class="search-input"
+                   placeholder="🔍 نام باشگاه، شماره، یا یوزرنیم..."
+                   onkeydown="if(event.key==='Enter') searchGymsForPassword()">
+            <button class="btn-primary" onclick="searchGymsForPassword()">🔍 جستجو</button>
+        </section>
+
+        <div id="pwd-search-error" class="error-msg"></div>
+        <div id="pwd-search-results" class="requests-list"></div>
+
+    </main>
+
     <footer class="footer">
         <p>پالس مدیریت © ۲۰۲۶ — پنل ادمین</p>
     </footer>
@@ -217,6 +281,7 @@
     <script src="js/admin.js"></script>
     <script src="js/actions.js"></script>
     <script src="js/licenses.js"></script>
+    <script src="js/passwords.js"></script>
     <script>
         // ═══ تب‌ها ═══
         function showTab(tabName) {

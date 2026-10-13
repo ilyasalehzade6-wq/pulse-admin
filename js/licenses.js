@@ -205,7 +205,7 @@ function getDaysLeft(iso) {
     const now = new Date();
     const diff = end - now;
     if (diff < 0) return null;
-    return Math.floor(diff / (1000 * 60 * 60 * 24));
+    return Math.ceil(diff / 86400000);
 }
 
 function formatDate(iso) {
