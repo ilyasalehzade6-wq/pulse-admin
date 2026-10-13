@@ -116,6 +116,11 @@ function renderResetCard(req) {
         ? '<span class="badge badge-orange">⏳ در انتظار</span>'
         : '<span class="badge badge-green">✅ حل شده</span>';
 
+    const reqType = req.request_type || 'password';
+    const typeBadge = reqType === 'username'
+        ? '<span class="badge badge-purple">👤 نام کاربری</span>'
+        : '<span class="badge badge-blue">🔒 رمز عبور</span>';
+
     const requestedDate = req.requested_at
         ? new Date(req.requested_at).toLocaleString("fa-IR")
         : "-";
@@ -132,16 +137,34 @@ function renderResetCard(req) {
            </div>`
         : "";
 
-    const actions = isPending
-        ? `<button class="btn-primary" onclick="openResetDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">🔄 تولید رمز جدید</button>
-           <button class="btn-ghost" onclick="viewGymPassword('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">👁️ مشاهده رمز فعلی</button>`
-        : "";
+    let actions = "";
+    if (isPending) {
+        // 🔑 دکمه‌ی اصلی بر اساس نوع درخواست (با رنگ برجسته)
+        const primaryBtn = reqType === 'username'
+            ? `<button class="btn-primary" onclick="openChangeUsernameDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">✏️ تعیین نام کاربری جدید</button>`
+            : `<button class="btn-primary" onclick="openResetDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">🔄 تولید رمز جدید</button>`;
+
+        // 🔄 دکمه‌ی ثانویه (نوع دیگه)
+        const secondaryBtn = reqType === 'username'
+            ? `<button class="btn-ghost" onclick="openResetDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">🔄 تولید رمز جدید</button>`
+            : `<button class="btn-ghost" onclick="openChangeUsernameDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">✏️ تغییر نام کاربری</button>`;
+
+        // 👁️ دکمه‌ی مشاهده
+        const viewBtn = reqType === 'username'
+            ? `<button class="btn-ghost" onclick="viewGymUsername('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">👁️ مشاهده نام کاربری فعلی</button>`
+            : `<button class="btn-ghost" onclick="viewGymPassword('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">👁️ مشاهده رمز فعلی</button>`;
+
+        actions = primaryBtn + secondaryBtn + viewBtn;
+    }
 
     return `
         <div class="request-card" style="background: #1a1a2e; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-right: 4px solid ${isPending ? '#f39c12' : '#2ecc71'};">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                 <strong style="font-size: 17px; color:#f1c40f;">🏢 ${escapeHtml(req.gym_name || "نامشخص")}</strong>
-                ${statusBadge}
+                <span>
+                    ${typeBadge}
+                    ${statusBadge}
+                </span>
             </div>
             <div style="color:#95a5a6; font-size: 14px; line-height: 1.8;">
                 <div>📱 شماره: <code style="direction:ltr; display:inline-block;">${escapeHtml(req.phone || "-")}</code></div>
@@ -424,4 +447,100 @@ function copyText(text) {
     }).catch(err => {
         alert("خطا در کپی: " + err);
     });
+}
+
+// ═══════════════════════════════════════════════════════
+//  👤 مشاهده نام کاربری فعلی
+// ═══════════════════════════════════════════════════════
+async function viewGymUsername(gymId, gymName) {
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_get_gym_username", { p_gym_id: gymId });
+        if (error) throw error;
+        if (!data?.success) { alert("❌ " + (data?.error || "خطا")); return; }
+
+        const modal = document.createElement("div");
+        modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;direction:rtl;";
+        modal.innerHTML = `
+            <div style="background:#1a1a2e;padding:30px;border-radius:16px;max-width:500px;width:100%;color:#e8e8f0;">
+                <h3 style="color:#f1c40f;margin:0 0 20px 0;">👤 نام کاربری ${escapeHtml(gymName)}</h3>
+                <div style="background:#0f0f1a;padding:20px;border-radius:10px;margin-bottom:20px;text-align:center;">
+                    <div style="font-size:28px;font-family:monospace;direction:ltr;letter-spacing:2px;color:#3498db;user-select:all;">${escapeHtml(data.username || "-")}</div>
+                </div>
+                <div style="display:flex;gap:10px;justify-content:center;">
+                    <button class="btn-primary" onclick="copyText('${escapeHtml(data.username || "")}'); this.parentElement.parentElement.parentElement.remove();">📋 کپی</button>
+                    <button class="btn-ghost" onclick="this.parentElement.parentElement.parentElement.remove();">بستن</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ✏️ دیالوگ تغییر نام کاربری
+// ═══════════════════════════════════════════════════════
+function openChangeUsernameDialog(gymId, gymName, requestId) {
+    const modal = document.createElement("div");
+    modal.id = "username-modal";
+    modal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;direction:rtl;";
+    modal.innerHTML = `
+        <div style="background:#1a1a2e;padding:30px;border-radius:16px;max-width:500px;width:100%;color:#e8e8f0;">
+            <h3 style="color:#f1c40f;margin:0 0 20px 0;">✏️ تغییر نام کاربری ${escapeHtml(gymName)}</h3>
+            <input type="text" id="new-username-input" placeholder="مثلاً: star_gym_2026"
+                   style="width:100%;padding:14px;font-family:monospace;font-size:18px;direction:ltr;text-align:center;background:#0f0f1a;color:#3498db;border:1px solid #34495e;border-radius:10px;margin-bottom:15px;">
+            <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <button class="btn-ghost" onclick="document.getElementById('new-username-input').value = 'user_' + Math.floor(1000+Math.random()*9000);" style="flex:1;">⚡ سریع</button>
+            </div>
+            <div style="display:flex;gap:10px;">
+                <button class="btn-primary" onclick="doChangeUsername('${gymId}', '${requestId}')" style="flex:2;">✅ اعمال</button>
+                <button class="btn-ghost" onclick="document.getElementById('username-modal').remove()" style="flex:1;">انصراف</button>
+            </div>
+            <div id="username-error" style="color:#e74c3c;margin-top:15px;display:none;"></div>
+        </div>`;
+    document.body.appendChild(modal);
+    setTimeout(() => document.getElementById("new-username-input").focus(), 100);
+}
+
+async function doChangeUsername(gymId, requestId) {
+    const input = document.getElementById("new-username-input");
+    const errBox = document.getElementById("username-error");
+    const newUsername = input.value.trim();
+
+    if (newUsername.length < 3) {
+        errBox.style.display = "block";
+        errBox.textContent = "⚠️ نام کاربری باید حداقل ۳ کاراکتر باشد";
+        return;
+    }
+
+    errBox.style.display = "none";
+    input.disabled = true;
+
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_change_gym_username", {
+            p_gym_id: gymId, p_new_username: newUsername, p_request_id: requestId,
+        });
+
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.error || "خطا");
+
+        document.getElementById("username-modal").remove();
+
+        const resModal = document.createElement("div");
+        resModal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;direction:rtl;";
+        resModal.innerHTML = `
+            <div style="background:#1a1a2e;padding:30px;border-radius:16px;max-width:500px;width:100%;color:#e8e8f0;">
+                <h3 style="color:#2ecc71;margin:0 0 20px 0;">✅ نام کاربری تغییر کرد!</h3>
+                <div style="background:#0f0f1a;padding:20px;border-radius:10px;margin-bottom:20px;text-align:center;">
+                    <div style="font-size:24px;font-family:monospace;direction:ltr;color:#3498db;user-select:all;">${escapeHtml(newUsername)}</div>
+                </div>
+                <button class="btn-primary" onclick="copyText('نام کاربری: ${escapeHtml(newUsername)}'); this.parentElement.parentElement.remove();" style="width:100%;">📋 کپی</button>
+            </div>`;
+        document.body.appendChild(resModal);
+        loadPasswordResets();
+    } catch (e) {
+        errBox.style.display = "block";
+        errBox.textContent = "❌ " + (e.message || "خطا");
+        input.disabled = false;
+    }
 }
