@@ -8,6 +8,8 @@ let currentRequestFilter = "all";
 // ═══════════════════════════════════════════════════════
 // راه‌اندازی
 // ═══════════════════════════════════════════════════════
+let _autoRefreshTimer = null;
+
 async function initRequests() {
     const session = await checkAdminSession();
     if (!session) {
@@ -16,6 +18,19 @@ async function initRequests() {
     }
 
     await loadRequests();
+
+    // 🔄 Auto-refresh هر ۳۰ ثانیه
+    if (_autoRefreshTimer) clearInterval(_autoRefreshTimer);
+    _autoRefreshTimer = setInterval(() => {
+        // فقط اگه تب requests فعاله
+        const tab = document.getElementById("tab-requests");
+        if (tab && tab.style.display !== "none") {
+            console.log("🔄 Auto-refresh license requests...");
+            loadRequests();
+        }
+    }, 30000);
+
+    console.log("✅ Auto-refresh شروع شد (۳۰ ثانیه)");
 }
 
 // ═══════════════════════════════════════════════════════

@@ -612,3 +612,31 @@ async function viewAllCredentials(gymId, gymName) {
 // ═══════════════════════════════════════════════════════
 //  🆕 دکمه در جستجو: مشاهده اطلاعات کامل
 // ═══════════════════════════════════════════════════════
+
+
+// ═══════════════════════════════════════════════════════
+//  🔄 Auto-Refresh درخواست‌های رمز
+// ═══════════════════════════════════════════════════════
+let _pwdAutoRefreshTimer = null;
+
+function startPasswordAutoRefresh() {
+    if (_pwdAutoRefreshTimer) clearInterval(_pwdAutoRefreshTimer);
+
+    _pwdAutoRefreshTimer = setInterval(() => {
+        // فقط اگه تب passwords فعاله
+        const tab = document.getElementById("tab-passwords");
+        if (tab && tab.style.display !== "none") {
+            console.log("🔄 Auto-refresh password resets...");
+            loadPasswordResets();
+        }
+    }, 30000);
+
+    console.log("✅ Password auto-refresh شروع شد (۳۰ ثانیه)");
+}
+
+// خودکار شروع کن وقتی صفحه لود شد
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startPasswordAutoRefresh);
+} else {
+    startPasswordAutoRefresh();
+}
