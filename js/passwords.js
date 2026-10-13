@@ -151,10 +151,8 @@ function renderResetCard(req) {
             ? `<button class="btn-ghost" onclick="openResetDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">🔄 تولید رمز جدید</button>`
             : `<button class="btn-ghost" onclick="openChangeUsernameDialog('${req.gym_id}', '${escapeHtml(req.gym_name || "")}', '${req.id}')">✏️ تغییر نام کاربری</button>`;
 
-        // 👁️ دکمه‌ی مشاهده
-        const viewBtn = reqType === 'username'
-            ? `<button class="btn-ghost" onclick="viewGymUsername('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">👁️ مشاهده نام کاربری فعلی</button>`
-            : `<button class="btn-ghost" onclick="viewGymPassword('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">👁️ مشاهده رمز فعلی</button>`;
+        // 👁️ دکمه‌ی مشاهده‌ی همه‌چیز
+        const viewBtn = `<button class="btn-ghost" onclick="viewAllCredentials('${req.gym_id}', '${escapeHtml(req.gym_name || "")}')">🔍 مشاهده اطلاعات کامل (رمز + نام کاربری)</button>`;
 
         actions = primaryBtn + secondaryBtn + viewBtn;
     }
@@ -413,10 +411,9 @@ function renderSearchResults() {
                 <div>🆔 یوزرنیم: <code style="direction:ltr; display:inline-block;">${escapeHtml(g.username || "-")}</code></div>
             </div>
             <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                ${g.has_vault
-                    ? `<button class="btn-primary" onclick="viewGymPassword('${g.id}', '${escapeHtml(g.name || "")}')">👁️ مشاهده رمز</button>`
-                    : ""}
-                <button class="btn-ghost" onclick="openResetDialog('${g.id}', '${escapeHtml(g.name || "")}', null)">🔄 تولید رمز جدید</button>
+                <button class="btn-primary" onclick="viewAllCredentials('${g.id}', '${escapeHtml(g.name || "")}')">🔍 مشاهده اطلاعات کامل</button>
+                <button class="btn-ghost" onclick="openResetDialog('${g.id}', '${escapeHtml(g.name || "")}', null)">🔄 تغییر رمز</button>
+                <button class="btn-ghost" onclick="openChangeUsernameDialog('${g.id}', '${escapeHtml(g.name || "")}', null)">✏️ تغییر نام کاربری</button>
             </div>
         </div>
     `).join("");
@@ -546,3 +543,72 @@ async function doChangeUsername(gymId, requestId) {
         input.disabled = false;
     }
 }
+
+// ═══════════════════════════════════════════════════════
+//  🔍 مشاهده‌ی همه‌ی اطلاعات (رمز + نام کاربری)
+// ═══════════════════════════════════════════════════════
+async function viewAllCredentials(gymId, gymName) {
+    try {
+        const client = getSupabase();
+        const { data, error } = await client.rpc("admin_get_gym_credentials", {
+            p_gym_id: gymId,
+        });
+
+        if (error) throw error;
+        if (!data?.success) {
+            alert("❌ " + (data?.error || "خطا"));
+            return;
+        }
+
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.88); display:flex; align-items:center;
+            justify-content:center; z-index:9999; padding:20px; direction:rtl;
+        `;
+        modal.innerHTML = `
+            <div style="background:#1a1a2e; padding:30px; border-radius:16px; max-width:520px; width:100%; color:#e8e8f0;">
+                <h3 style="color:#f1c40f; margin:0 0 20px 0; text-align:center;">🔐 اطلاعات کامل مشتری</h3>
+
+                <div style="background: rgba(52,152,219,0.08); padding:15px; border-radius:10px; margin-bottom:12px; border-right:3px solid #3498db;">
+                    <div style="color:#95a5a6; font-size:12px; margin-bottom:5px;">🏢 باشگاه</div>
+                    <div style="color:#f1c40f; font-size:16px; font-weight:bold;">${escapeHtml(data.gym?.name || gymName)}</div>
+                </div>
+
+                <div style="background: rgba(52,152,219,0.08); padding:15px; border-radius:10px; margin-bottom:12px; border-right:3px solid #3498db;">
+                    <div style="color:#95a5a6; font-size:12px; margin-bottom:5px;">👤 نام کاربری فعلی</div>
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <code style="background:#0f0f1a; padding:8px 14px; border-radius:6px; direction:ltr; font-size:18px; letter-spacing:1px; color:#3498db;">${escapeHtml(data.username || "-")}</code>
+                        <button class="btn-ghost" onclick="copyText('${escapeHtml(data.username || "")}')">📋 کپی</button>
+                    </div>
+                </div>
+
+                <div style="background: rgba(46,204,113,0.08); padding:15px; border-radius:10px; margin-bottom:12px; border-right:3px solid #2ecc71;">
+                    <div style="color:#95a5a6; font-size:12px; margin-bottom:5px;">🔒 رمز عبور فعلی</div>
+                    <div style="display:flex; align-items:center; justify-content:space-between;">
+                        <code style="background:#0f0f1a; padding:8px 14px; border-radius:6px; direction:ltr; font-size:18px; letter-spacing:2px; color:#2ecc71;">${escapeHtml(data.password || "- (ذخیره نشده)")}</code>
+                        ${data.password ? `<button class="btn-ghost" onclick="copyText('${escapeHtml(data.password)}')">📋 کپی</button>` : ""}
+                    </div>
+                </div>
+
+                <div style="background: rgba(241,196,15,0.08); padding:15px; border-radius:10px; margin-bottom:20px; border-right:3px solid #f1c40f;">
+                    <div style="color:#95a5a6; font-size:12px; margin-bottom:5px;">📱 شماره موبایل</div>
+                    <code style="direction:ltr; font-size:16px;">${escapeHtml(data.gym?.phone || "-")}</code>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-primary" onclick="copyText('باشگاه: ${escapeHtml(data.gym?.name || "")}\\nنام کاربری: ${escapeHtml(data.username || "")}\\nرمز: ${escapeHtml(data.password || "")}\\nشماره: ${escapeHtml(data.gym?.phone || "")}'); this.parentElement.parentElement.parentElement.remove();" style="flex:2;">📋 کپی همه</button>
+                    <button class="btn-ghost" onclick="this.parentElement.parentElement.parentElement.remove();" style="flex:1;">بستن</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    } catch (e) {
+        console.error(e);
+        alert("❌ خطا: " + e.message);
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  🆕 دکمه در جستجو: مشاهده اطلاعات کامل
+// ═══════════════════════════════════════════════════════
