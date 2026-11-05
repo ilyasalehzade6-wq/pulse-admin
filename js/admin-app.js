@@ -1,28 +1,29 @@
-// ==========================================
-// متغیرهای سراسری (Global)
-// ==========================================
 window.allGyms = [];
 window.currentFilter = 'all';
 
-// ==========================================
-// 1. توابع راه‌اندازی و رندر
-// ==========================================
 window.initDashboard = async function() {
-    const client = window.getSupabase();
-    if (!client) return;
-    
+    console.log("⏳ در حال دریافت اطلاعات مشتریان...");
     const tbody = document.getElementById("gyms-tbody");
     if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-zinc-500">در حال بارگذاری...</td></tr>';
 
     try {
-        const { data, error } = await client.from('gyms').select('*').order('created_at', { ascending: false });
+        const client = window.getSupabase();
+        if (!client) throw new Error("اتصال به دیتابیس برقرار نشد (Client is null)");
+
+        // اعمال تایم‌اوت ۵ ثانیه‌ای
+        const fetchPromise = client.from('gyms').select('*').order('created_at', { ascending: false });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
+        
+        const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
         if (error) throw error;
+        
+        console.log("✅ اطلاعات دریافت شد:", data);
         window.allGyms = data || [];
         updateStats();
         window.renderGyms();
     } catch (e) {
-        console.error(e);
-        if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-red-500">خطا در اتصال به دیتابیس</td></tr>';
+        console.error("❌ خطا در بارگذاری:", e);
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-red-500">خطا در اتصال (یا اطلاعاتی وجود ندارد)</td></tr>';
     }
 };
 
@@ -117,9 +118,7 @@ function renderActions(g) {
     return viewBtn + `<button onclick="archiveGym('${g.id}')" class="p-1.5 text-zinc-400 hover:text-blue-400 rounded-md hover:bg-blue-500/10" title="آرشیو"><i data-lucide="archive" class="w-4 h-4"></i></button>` + `<button onclick="blockGym('${g.id}')" class="p-1.5 text-zinc-400 hover:text-amber-400 rounded-md hover:bg-amber-500/10" title="مسدود"><i data-lucide="lock" class="w-4 h-4"></i></button>` + `<button onclick="deleteGym('${g.id}')" class="p-1.5 text-zinc-400 hover:text-red-400 rounded-md hover:bg-red-500/10" title="حذف"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
 }
 
-// ==========================================
-// 2. عملیات‌ها (Actions)
-// ==========================================
+// توابع عملیات و رمزها (همان‌ها که قبلا نوشتیم)
 window.viewGymCredentials = async function(gymId, gymName) {
     try {
         const client = window.getSupabase();
@@ -234,9 +233,6 @@ window.deleteGym = async function(gymId) {
     } catch (e) { alert("❌ " + e.message); }
 };
 
-// ==========================================
-// 3. مدیریت رمزهای عبور
-// ==========================================
 window.loadPasswordResets = async function() {
     const list = document.getElementById('pwd-requests-list');
     if (!list) return;
@@ -256,15 +252,14 @@ window.loadPasswordResets = async function() {
             list.innerHTML = '<div class="text-center py-6 text-zinc-500">هیچ درخواستی وجود ندارد</div>';
             return;
         }
-
-        list.innerHTML = data.requests.map(req => `
-            <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 flex flex-col gap-2">
-                <div class="flex justify-between items-center"><strong class="text-amber-500">${req.gym_name || 'نامشخص'}</strong><span class="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300">${req.status}</span></div>
-                <div class="text-xs text-zinc-400">شماره: ${req.phone || '-'}</div>
-                <div class="text-xs text-zinc-400">نوع: ${req.request_type === 'username' ? 'نام کاربری' : 'رمز عبور'}</div>
-            </div>
-        `).join('');
+        list.innerHTML = data.requests.map(req => `<div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 flex flex-col gap-2"><div class="flex justify-between items-center"><strong class="text-amber-500">${req.gym_name || 'نامشخص'}</strong><span class="text-xs px-2 py-1 rounded bg-zinc-800 text-zinc-300">${req.status}</span></div><div class="text-xs text-zinc-400">شماره: ${req.phone || '-'}</div><div class="text-xs text-zinc-400">نوع: ${req.request_type === 'username' ? 'نام کاربری' : 'رمز عبور'}</div></div>`).join('');
     } catch (e) {
         list.innerHTML = `<div class="text-center py-4 text-red-500">خطا: ${e.message}</div>`;
     }
 };
+
+// راه‌اندازی خودکار
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.location.pathname.includes('login.html')) return;
+    window.initDashboard();
+});
