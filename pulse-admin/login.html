@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ورود — پنل ادمین</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class' } </script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090b; color: #fff; }
+        .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.2); border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div class="w-[400px] h-[400px] bg-amber-500/5 rounded-full blur-[100px]"></div>
+    </div>
+
+    <div class="w-full max-w-sm mx-4 bg-[#121215] border border-zinc-800 rounded-2xl p-8 shadow-2xl relative z-10">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center mb-4 mx-auto border border-zinc-700">
+                <i data-lucide="shield-check" class="w-6 h-6 text-amber-500 stroke-[1.5]"></i>
+            </div>
+            <h1 class="text-xl font-bold text-white tracking-tight mb-1">پنل مدیریت سیستم</h1>
+            <p class="text-xs text-zinc-400">دسترسی ویژه مدیران ارشد</p>
+        </div>
+
+        <form id="loginForm" class="flex flex-col gap-4">
+            <div>
+                <label class="block text-xs font-medium text-zinc-300 mb-1.5">نام کاربری</label>
+                <input type="text" id="username" class="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all" placeholder="admin" required>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-zinc-300 mb-1.5">رمز عبور</label>
+                <input type="password" id="password" class="w-full bg-[#09090b] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 transition-all" placeholder="••••••••" required>
+            </div>
+            <div id="errorMsg" class="text-red-500 text-xs text-center hidden p-2 bg-red-500/10 rounded border border-red-500/20"></div>
+            <button type="submit" id="loginBtn" class="w-full mt-2 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold rounded-lg py-2.5 flex items-center justify-center gap-2 transition-all shadow-lg shadow-amber-500/20 text-sm">
+                <i data-lucide="log-in" class="w-4 h-4 stroke-[2]"></i>
+                <span class="btn-text">ورود به پنل</span>
+                <span class="spinner"></span>
+            </button>
+        </form>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script> document.addEventListener('DOMContentLoaded', () => { if (window.lucide) lucide.createIcons(); }); </script>
+</body>
+</html>

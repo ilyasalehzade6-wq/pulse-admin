@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>پنل ادمین — پالس مدیریت</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script> tailwind.config = { darkMode: 'class' } </script>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #09090b; color: #fff; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 10px; }
+        
+        /* استایل جدول */
+        .gyms-table th { padding: 12px 16px; text-align: right; font-size: 13px; color: #a1a1aa; border-bottom: 1px solid #27272a; white-space: nowrap; }
+        .gyms-table td { padding: 12px 16px; border-bottom: 1px solid #27272a; font-size: 14px; white-space: nowrap; }
+        .gyms-table tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
+
+        /* 🎨 Light Mode Overrides (Bulletproof) */
+        html:not(.dark) body, html:not(.dark) main { background-color: #f4f4f5 !important; color: #18181b !important; }
+        html:not(.dark) aside, html:not(.dark) header { background-color: #ffffff !important; border-color: #e4e4e7 !important; }
+        html:not(.dark) .bg-\[\#121215\], html:not(.dark) .bg-\[\#111111\] { background-color: #ffffff !important; border-color: #e4e4e7 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important; }
+        html:not(.dark) .text-white, html:not(.dark) .text-zinc-100, html:not(.dark) .text-zinc-200 { color: #18181b !important; }
+        html:not(.dark) .text-zinc-400, html:not(.dark) .text-zinc-500 { color: #71717a !important; }
+        html:not(.dark) .border-zinc-800, html:not(.dark) .border-zinc-700 { border-color: #e4e4e7 !important; }
+        html:not(.dark) .gyms-table th { color: #71717a !important; border-bottom-color: #e4e4e7 !important; }
+        html:not(.dark) .gyms-table td { border-bottom-color: #e4e4e7 !important; }
+        html:not(.dark) .gyms-table tbody tr:hover { background-color: #f4f4f5 !important; }
+        html:not(.dark) .bg-\[\#09090b\] { background-color: #f4f4f5 !important; }
+        html:not(.dark) .nav-item.bg-amber-500\/10 { background-color: #fef3c7 !important; color: #b45309 !important; border-color: #f59e0b !important; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black/60 z-40 hidden md:hidden backdrop-blur-sm transition-opacity" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 right-0 z-50 w-64 bg-[#111111] border-l border-zinc-800 flex flex-col p-4 transform translate-x-full md:relative md:translate-x-0 transition-transform duration-300 md:flex shrink-0 h-full">
+        <div class="flex items-center justify-between px-2 mb-8 mt-2">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-amber-500 stroke-[1.5]"></i>
+                </div>
+                <span class="font-bold text-lg tracking-tight text-white">پالس ادمین</span>
+            </div>
+            <button onclick="toggleSidebar()" class="md:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <nav class="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar">
+            <a href="#" class="flex items-center gap-3 px-3 py-3 rounded-xl bg-amber-500/10 text-amber-500 border-r-2 border-amber-500 font-bold transition-colors nav-item" data-tab="dashboard" onclick="switchTab('dashboard', this)">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 stroke-[2]"></i> داشبورد
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 font-medium transition-colors nav-item" data-tab="clubs" onclick="switchTab('clubs', this)">
+                <i data-lucide="building" class="w-5 h-5 stroke-[1.5]"></i> مشتریان (باشگاه‌ها)
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-3 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/50 font-medium transition-colors nav-item" data-tab="passwords" onclick="switchTab('passwords', this)">
+                <i data-lucide="key" class="w-5 h-5 stroke-[1.5]"></i> رمزهای عبور
+            </a>
+        </nav>
+        
+        <div class="mt-auto pt-4 border-t border-zinc-800">
+            <div class="flex items-center gap-3 px-2 cursor-pointer group" onclick="logout()">
+                <div class="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-bold border border-zinc-700">A</div>
+                <div class="flex flex-col">
+                    <span class="text-sm font-medium group-hover:text-amber-500 transition-colors text-white">مدیر سیستم</span>
+                    <span class="text-xs text-zinc-500">خروج</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Layout -->
+    <div class="flex-1 flex flex-col min-w-0 h-full relative">
+        
+        <!-- Top Bar -->
+        <header class="w-full h-16 border-b border-zinc-800 flex justify-between items-center px-4 md:px-6 shrink-0 bg-[#111111] z-30">
+            <div class="flex items-center gap-2 md:gap-3">
+                <!-- Mobile Menu Toggle -->
+                <button onclick="toggleSidebar()" class="md:hidden p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors">
+                    <i data-lucide="menu" class="w-6 h-6 stroke-[1.5]"></i>
+                </button>
+
+                <i data-lucide="sun" class="w-5 h-5 text-amber-500 stroke-[1.5] hidden dark:block"></i>
+                <i data-lucide="sun" class="w-5 h-5 text-amber-600 stroke-[1.5] block dark:hidden"></i>
+                <h1 class="text-sm md:text-lg font-bold tracking-tight text-white" id="pageTitle">داشبورد مدیریت</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="p-2 rounded-lg bg-[#09090b] border border-zinc-800 text-zinc-400 hover:text-white transition-colors">
+                    <i data-lucide="moon" class="w-4 h-4 hidden dark:block stroke-[1.5]"></i>
+                    <i data-lucide="sun" class="w-4 h-4 block dark:hidden stroke-[1.5]"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#09090b] custom-scrollbar">
+            
+            <!-- ==================== TAB: DASHBOARD ==================== -->
+            <div id="tab-dashboard" class="w-full flex flex-col gap-4 md:gap-6">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                        <div><p class="text-xs md:text-sm text-zinc-400 mb-1">کل مشتریان</p><h3 id="stat-total" class="text-xl md:text-2xl font-bold text-white font-mono">0</h3></div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500"><i data-lucide="users" class="w-4 h-4 md:w-5 md:h-5"></i></div>
+                    </div>
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                        <div><p class="text-xs md:text-sm text-zinc-400 mb-1">فعال</p><h3 id="stat-active" class="text-xl md:text-2xl font-bold text-emerald-500 font-mono">0</h3></div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500"><i data-lucide="check-circle" class="w-4 h-4 md:w-5 md:h-5"></i></div>
+                    </div>
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                        <div><p class="text-xs md:text-sm text-zinc-400 mb-1">آزمایشی</p><h3 id="stat-trial" class="text-xl md:text-2xl font-bold text-amber-500 font-mono">0</h3></div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-500"><i data-lucide="clock" class="w-4 h-4 md:w-5 md:h-5"></i></div>
+                    </div>
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                        <div><p class="text-xs md:text-sm text-zinc-400 mb-1">منقضی شده</p><h3 id="stat-expired" class="text-xl md:text-2xl font-bold text-red-500 font-mono">0</h3></div>
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500"><i data-lucide="x-circle" class="w-4 h-4 md:w-5 md:h-5"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== TAB: CLUBS (GYMS) ==================== -->
+            <div id="tab-clubs" class="w-full hidden flex-col gap-4 md:gap-6">
+                <div class="flex flex-col md:flex-row gap-3 items-start md:items-center mb-2 md:mb-4">
+                    <input type="text" id="search-input" placeholder="جستجو (نام، مالک، شماره، کد)..." class="w-full md:flex-1 bg-[#121215] border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500" oninput="renderGyms()">
+                    <div class="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
+                        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-[#121215] border border-zinc-800 text-zinc-400 hover:text-white whitespace-nowrap" data-filter="all" onclick="setFilter('all')">همه</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-[#121215] border border-zinc-800 text-zinc-400 hover:text-white whitespace-nowrap" data-filter="active" onclick="setFilter('active')">فعال</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-[#121215] border border-zinc-800 text-zinc-400 hover:text-white whitespace-nowrap" data-filter="trial" onclick="setFilter('trial')">آزمایشی</button>
+                        <button class="filter-btn px-4 py-2 rounded-lg text-sm font-medium bg-[#121215] border border-zinc-800 text-zinc-400 hover:text-white whitespace-nowrap" data-filter="expired" onclick="setFilter('expired')">منقضی</button>
+                    </div>
+                </div>
+                
+                <div class="bg-[#121215] border border-zinc-800 rounded-xl overflow-hidden shadow-sm flex flex-col">
+                    <div class="overflow-x-auto w-full custom-scrollbar">
+                        <table class="gyms-table w-full min-w-[800px] border-collapse text-sm">
+                            <thead>
+                                <tr>
+                                    <th>کد مشتری</th>
+                                    <th>نام مجموعه</th>
+                                    <th>مالک</th>
+                                    <th>شماره تماس</th>
+                                    <th>پلن</th>
+                                    <th>اعتبار</th>
+                                    <th>تاریخ ثبت</th>
+                                    <th>وضعیت</th>
+                                    <th class="text-center">عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gyms-tbody">
+                                <tr><td colspan="9" class="text-center py-6 text-zinc-500">در حال بارگذاری...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="loading" class="text-center py-4 text-amber-500 hidden">در حال بارگذاری...</div>
+                <div id="error-msg" class="text-center py-4 text-red-500 hidden"></div>
+            </div>
+
+            <!-- ==================== TAB: PASSWORDS ==================== -->
+            <div id="tab-passwords" class="w-full hidden flex-col gap-4 md:gap-6">
+                <div class="grid grid-cols-2 gap-3 md:gap-4">
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm text-center">
+                        <div class="text-xs md:text-sm text-zinc-400 mb-1">در انتظار بررسی</div>
+                        <div id="pwd-pending" class="text-xl md:text-2xl font-bold text-amber-500 font-mono">0</div>
+                    </div>
+                    <div class="bg-[#121215] border border-zinc-800 rounded-xl p-4 md:p-5 shadow-sm text-center">
+                        <div class="text-xs md:text-sm text-zinc-400 mb-1">حل شده</div>
+                        <div id="pwd-resolved" class="text-xl md:text-2xl font-bold text-emerald-500 font-mono">0</div>
+                    </div>
+                </div>
+                <div id="pwd-loading" class="text-center py-4 text-amber-500 hidden">در حال بارگذاری...</div>
+                <div id="pwd-error" class="text-center py-4 text-red-500 hidden"></div>
+                <div id="pwd-requests-list" class="flex flex-col gap-4"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/license-utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/passwords.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => { 
+            if (window.lucide) lucide.createIcons(); 
+            if(typeof initDashboard === 'function') initDashboard();
+        });
+    </script>
+</body>
+</html>
